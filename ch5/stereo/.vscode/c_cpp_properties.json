@@ -3,7 +3,10 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/usr/local/include/pangolin/**",
+                "/usr/include/eigen3"
+                
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",
