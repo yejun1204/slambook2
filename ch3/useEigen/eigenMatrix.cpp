@@ -4,9 +4,9 @@ using namespace std;
 
 #include <ctime>
 
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 using namespace Eigen;
 
