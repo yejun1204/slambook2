@@ -5,6 +5,7 @@
 #include <pangolin/pangolin.h>
 #include <unistd.h>
 
+
 using namespace std;
 using namespace Eigen;
 
@@ -30,6 +31,7 @@ int main(int argc, char **argv) {
     
     vector<Vector4d,Eigen::aligned_allocator<Vector4d>> pointcloud;
 
+    cout<<left.rows<<" "<<left.cols<<" "<<left.step[0]<<" "<<left.step[1]<<" "<<left.channels()<<endl;
     cout<<disparity_sgbm.rows<<" "<<disparity_sgbm.cols<<" "<<disparity_sgbm.step[0]<<" "<<disparity_sgbm.step[1]<<" "<<disparity_sgbm.channels()<<endl;
     cout<<disparity.rows<<" "<<disparity.cols<<" "<<disparity.step[0]<<" "<<disparity.step[1]<<" "<<disparity.channels()<<endl;
 
@@ -53,14 +55,30 @@ int main(int argc, char **argv) {
         {
             if(disparity.at<float>(v,u)<=0||disparity.at<float>(v,u)>=96.0) continue;
 
-            Vector4d point(0,0,left.at<uchar>(v,u))   
-           
+            Vector4d point(0,0,0,left.at<uchar>(v,u)/255.0);
+
+            double depth=b*fx/(disparity.at<float>(v,u));//disparity in pixel
+            double x=depth*(u-cx)/fx;
+            double y=depth*(v-cy)/fy;
             
+            point[0]=x;
+            point[1]=y;
+            point[2]=depth;
+ 
+           
+            pointcloud.push_back(point);
+            //cout<<(int)left.at<Eigen::Matrix<uchar,3,1>>(v,u)[0]<<" "<<(int)left.at<Eigen::Matrix<uchar,3,1>>(v,u)[1]<<" "<<(int)left.at<Eigen::Matrix<uchar,3,1>>(v,u)[2]<<" "<<endl;
+            //cout<<point<<endl;       
             
         }
+      
         
 
     }
+    cv::imshow("disparity",disparity/255.0);
+    cv::waitKey(0);
+    showPointCloud(pointcloud);
+    return 0;
 
 
     
