@@ -12,52 +12,58 @@ using namespace Eigen;
 string left_file = "./left.png";
 string right_file = "./right.png";
 
-// 在pangolin中画图，已写好，无需调整
+
 void showPointCloud(
     const vector<Vector4d, Eigen::aligned_allocator<Vector4d>> &pointcloud);
 
 int main(int argc, char **argv) {
-
-    // 内参
     double fx = 718.856, fy = 718.856, cx = 607.1928, cy = 185.2157;
-    // 基线
-    double b = 0.573;
+    double b=0.573;
 
-    // 读取图像
-    cv::Mat left = cv::imread(left_file, 0);
-    cv::Mat right = cv::imread(right_file, 0);
-    cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(
-        0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32);    // 神奇的参数
+    cv::Mat left=cv::imread(left_file);
+    cv::Mat right=cv::imread(right_file);
+    cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(0, 96, 9, 8 * 9 * 9, 32 * 9 * 9, 1, 63, 10, 100, 32);
     cv::Mat disparity_sgbm, disparity;
-    sgbm->compute(left, right, disparity_sgbm);
-    disparity_sgbm.convertTo(disparity, CV_32F, 1.0 / 16.0f);
+    sgbm->compute(left,right,disparity_sgbm);
+    disparity_sgbm.convertTo(disparity,CV_32F,1.0/16.0f);//signed short 2byte -> float 4byte 
+    
+    
+    vector<Vector4d,Eigen::aligned_allocator<Vector4d>> pointcloud;
 
-    // 生成点云
-    vector<Vector4d, Eigen::aligned_allocator<Vector4d>> pointcloud;
+    cout<<disparity_sgbm.rows<<" "<<disparity_sgbm.cols<<" "<<disparity_sgbm.step[0]<<" "<<disparity_sgbm.step[1]<<" "<<disparity_sgbm.channels()<<endl;
+    cout<<disparity.rows<<" "<<disparity.cols<<" "<<disparity.step[0]<<" "<<disparity.step[1]<<" "<<disparity.channels()<<endl;
 
-    // 如果你的机器慢，请把后面的v++和u++改成v+=2, u+=2
-    for (int v = 0; v < left.rows; v++)
-        for (int u = 0; u < left.cols; u++) {
-            if (disparity.at<float>(v, u) <= 0.0 || disparity.at<float>(v, u) >= 96.0) continue;
+    cout<<disparity_sgbm.type()<<" "<<disparity.type()<<" "<<disparity_sgbm.at<short>(10,0)<<" "<< disparity.at<float>(10,0)<<endl;
+/*
++--------+----+----+----+----+------+------+------+------+
+|        | C1 | C2 | C3 | C4 | C(5) | C(6) | C(7) | C(8) |
++--------+----+----+----+----+------+------+------+------+
+| CV_8U  |  0 |  8 | 16 | 24 |   32 |   40 |   48 |   56 |
+| CV_8S  |  1 |  9 | 17 | 25 |   33 |   41 |   49 |   57 |
+| CV_16U |  2 | 10 | 18 | 26 |   34 |   42 |   50 |   58 |
+| CV_16S |  3 | 11 | 19 | 27 |   35 |   43 |   51 |   59 |
+| CV_32S |  4 | 12 | 20 | 28 |   36 |   44 |   52 |   60 |
+| CV_32F |  5 | 13 | 21 | 29 |   37 |   45 |   53 |   61 |
+| CV_64F |  6 | 14 | 22 | 30 |   38 |   46 |   54 |   62 |
++--------+----+----+----+----+------+------+------+------+
+*/
+    for(int v=0;v<left.rows;v++)
+    {
+        for(int u=0;u<left.cols;u++)
+        {
+            if(disparity.at<float>(v,u)<=0||disparity.at<float>(v,u)>=96.0) continue;
 
-            Vector4d point(0, 0, 0, left.at<uchar>(v, u) / 255.0); // 前三维为xyz,第四维为颜色
-
-            // 根据双目模型计算 point 的位置
-            double x = (u - cx) / fx;
-            double y = (v - cy) / fy;
-            double depth = fx * b / (disparity.at<float>(v, u));
-            point[0] = x * depth;
-            point[1] = y * depth;
-            point[2] = depth;
-
-            pointcloud.push_back(point);
+            Vector4d point(0,0,left.at<uchar>(v,u))   
+           
+            
+            
         }
+        
 
-    cv::imshow("disparity", disparity / 96.0);
-    cv::waitKey(0);
-    // 画出点云
-    showPointCloud(pointcloud);
-    return 0;
+    }
+
+
+    
 }
 
 void showPointCloud(const vector<Vector4d, Eigen::aligned_allocator<Vector4d>> &pointcloud) {

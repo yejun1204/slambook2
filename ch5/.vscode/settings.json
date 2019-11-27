@@ -2,6 +2,7 @@
     "files.associations": {
         "core": "cpp",
         "geometry": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "iostream": "cpp"
     }
 }
